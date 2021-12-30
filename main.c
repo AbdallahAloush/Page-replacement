@@ -77,6 +77,40 @@ int FIFO(int *pagesArray, int numberOfFrames, int numberOfPages)
     return countPageFaults;
 }
 
+int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages){ 
+    int *framesArray = malloc(sizeof(int) * numberOfFrames);
+    int countPageFaults = 0;
+    int j = 0;                  // Another variable for operating on frames array
+    int nextReplace = 0;        // Index of the element in the frames array that is going to be replaced
+    for(int i=0; i<=numbeOfPages; i++){
+        if (hitMiss(framesArray, numberOfFrames, pagesArray[i]) && j < numberOfFrames)     // if the frames array is not full and miss 
+        {
+            //Adding the element to the array
+            framesArray[j++] = pagesArray[i];
+
+            //Printing
+            printf("%02d     ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+
+    
+    }
+
+
+
+
+
+
+
+
+    //Free both arrays because we won't be needing them
+    free(pagesArray);
+    free(framesArray);
+    return countPageFaults;
+}
+
+
+
 int main(int argc, char const *argv[])
 {
     int numberOfFrames;
