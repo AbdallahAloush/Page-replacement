@@ -3,22 +3,14 @@
 #define maxString 16
 #define maxArray 128
 
-//! FIFO (int* array, int numberOfFrames)
-//! we need a search function
-//! array printing function
-//! array pasrsing
-
 // This function is used to check if the new page is in the memory or not
-
-int hitMiss(int *array, int arraySize, int key)
+int hitMiss(int *array, int beginIndex, int arraySize, int key)
 {
-    for (int i = 0; i < arraySize; i++)
+    for (int i = beginIndex; i < arraySize; i++)
     {
         if (key == array[i])
             return i; // function returns 1 on hit
-        // we can make the function append to the array in case of miss
     }
-    // TODO: call replacement algorithm
     return -1; // function returns 0 on miss
 }
 
@@ -42,6 +34,26 @@ int maxIndex(int *array, int arraySize)
     return indexMax;
 }
 
+int optimalReplace(int *pagesArray, int *framesArray, int startPage, int numberOfPages, int numberOfFrames)
+{
+    // Search for each element in the array
+    int searchResult;
+    int *nextOccurence = malloc(sizeof(int) * numberOfFrames);
+    int j = 0; // Iterator for the next occurence array
+
+    for (int i = 0; i < numberOfFrames; i++)
+    {
+        searchResult = hitMiss(pagesArray, startPage, numberOfPages, framesArray[i]);
+        // if the element is not found in the remaining pages then it's the most suitable to be replaced
+        if (searchResult == -1)
+            return i;
+
+        else
+            nextOccurence[j++] = startPage - searchResult;
+    }
+    free(nextOccurence);
+    return maxIndex(nextOccurence, numberOfFrames);
+}
 void printArr(int *array, int numberOfPrints)
 {
     for (int i = 0; i < numberOfPrints; i++)
@@ -62,7 +74,7 @@ int FIFO(int *pagesArray, int numberOfFrames, int numberOfPages)
     //  We took the number of pages as an argument to be able to loop on it
     for (int i = 0; i < numberOfPages; i++)
     {
-        hMResult = hitMiss(framesArray, j, pagesArray[i]);
+        hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
         if (hMResult == -1 && j < numberOfFrames) // if the frames array is not full and miss
         {
             // Adding the element to the array
@@ -110,7 +122,7 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
 
     for (int i = 0; i < numbeOfPages; i++)
     {
-        hMResult = hitMiss(framesArray, j, pagesArray[i]);
+        hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
         if (j < numberOfFrames && hMResult == -1)
         {
             // miss case
@@ -174,7 +186,7 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
 
     for (int i = 0; i < numberOfPages; i++)
     {
-        hMResult = hitMiss(framesArray, j, pagesArray[i]);
+        hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
         if (j < numberOfFrames && hMResult == -1)
         {
             framesArray[j] = pagesArray[i];
@@ -199,7 +211,7 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
             framesArray[nextReplace] = pagesArray[i];
             useBit[nextReplace] = 1;
             (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
-            
+
             // Printing
             printf("%02d F   ", pagesArray[i]);
             printArr(framesArray, j);
@@ -219,12 +231,55 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
     return countPageFaults;
 }
 
+int OPTIMAL(int *pagesArray, int numberOfFrames, int numberOfPages)
+{
+    int *framesArray = malloc(sizeof(int) * numberOfFrames);
+    int countPageFaults = 0;
+    int j = 0;           // Another variable for operating on frames array
+    int hMResult;        // Used to store the result of the hit miss function
+    int nextReplace = 0; // Index of the element in the frames array that is going to be replaced
+    for (int i = 0; i < numberOfPages; i++)
+    {
+        hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
+        if (j < numberOfFrames && hMResult == -1)
+        {
+            // Adding the element to the array
+            framesArray[j++] = pagesArray[i];
+
+            // Printing
+            printf("%02d     ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+        else if (hMResult == -1)
+        {
+            nextReplace = optimalReplace(pagesArray, framesArray, i, numberOfPages, numberOfFrames);
+            framesArray[nextReplace] = pagesArray[i];
+            countPageFaults++;
+
+            // Printing
+            printf("%02d F   ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+        else
+        {
+            // Printing
+            printf("%02d     ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+    }
+
+    // Free both arrays because we won't be needing them
+    free(pagesArray);
+    free(framesArray);
+    return countPageFaults;
+}
+
 int main(int argc, char const *argv[])
 {
     int numberOfFrames;
     int tempPageNumber;
     int *pages = malloc(sizeof(int) * maxArray);
-    int i = 0; // iteratr for scanning the page numbers as input
+    int i = 0; // iterator for scanning the page numbers as input
     int countPageFaults = 0;
     char replacementAlgo[maxString];
 
@@ -242,9 +297,11 @@ int main(int argc, char const *argv[])
         }
     }
 
-    // Making a switch case to be able to call each function
-    // Since the 4 options has distinct first characters we can use switch case instead of using string comparisons
-    // I accounted for ssmall letters although it's not in the template shown in the pdf just to be on the safe side
+    /*
+    Making a switch case to be able to call each function
+    Since the 4 options has distinct first characters we can use switch case instead of using string comparisons
+    I accounted for small letters although it's not in the template shown in the pdf just to be on the safe side
+    */
     printf("Replacement Policy = %s", replacementAlgo);
     printf("\n-------------------------------------\n");
     printf("Page   Content of Frames\n");
@@ -266,7 +323,7 @@ int main(int argc, char const *argv[])
         break;
     case 'O':
     case 'o':
-        /* Call optimal*/
+        countPageFaults = OPTIMAL(pages, numberOfFrames, i);
         break;
     default:
         printf("Error: make sure to input one of the replacement algorithms");
