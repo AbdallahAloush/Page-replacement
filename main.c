@@ -15,11 +15,31 @@ int hitMiss(int *array, int arraySize, int key)
     for (int i = 0; i < arraySize; i++)
     {
         if (key == array[i])
-            return 1; // function returns 1 on hit
+            return i; // function returns 1 on hit
         // we can make the function append to the array in case of miss
     }
     // TODO: call replacement algorithm
-    return 0; // function returns 0 on miss
+    return -1; // function returns 0 on miss
+}
+
+/*
+We can think of a better algorithm to implement getting the maximum index
+but since we deal with small arrays it won't make much of a difference
+*/
+// O(n) algorithm
+int maxIndex(int *array, int arraySize)
+{
+    int indexMax = 0;
+    int maximumElement = array[0];
+    for (int i = 0; i < arraySize; i++)
+    {
+        if (array[i] > maximumElement)
+        {
+            maximumElement = array[i];
+            indexMax = i;
+        }
+    }
+    return indexMax;
 }
 
 void printArr(int *array, int numberOfPrints)
@@ -35,81 +55,126 @@ int FIFO(int *pagesArray, int numberOfFrames, int numberOfPages)
 {
     int *framesArray = malloc(sizeof(int) * numberOfFrames);
     int countPageFaults = 0;
-    int j = 0;                  // Another variable for operating on frames array
-    int nextReplace = 0;        // Index of the element in the frames array that is going to be replaced
-    
+    int j = 0;           // Another variable for operating on frames array
+    int nextReplace = 0; // Index of the element in the frames array that is going to be replaced
+
     //  We took the number of pages as an argument to be able to loop on it
     for (int i = 0; i < numberOfPages; i++)
     {
-        if (!hitMiss(framesArray, numberOfFrames, pagesArray[i]) && j < numberOfFrames)     // if the frames array is not full and miss 
+        if (hitMiss(framesArray, numberOfFrames, pagesArray[i]) == -1 && j < numberOfFrames) // if the frames array is not full and miss
         {
-            //Adding the element to the array
+            // Adding the element to the array
             framesArray[j++] = pagesArray[i];
 
-            //Printing
+            // Printing
             printf("%02d     ", pagesArray[i]);
             printArr(framesArray, j);
         }
-        else if (!hitMiss(framesArray, numberOfFrames, pagesArray[i]))          //if the frames array is full and miss 
+        else if (hitMiss(framesArray, numberOfFrames, pagesArray[i]) == -1) // if the frames array is full and miss
         {
-            //Replacing the element that has been in the array the longest
+            // Replacing the element that has been in the array the longest
             framesArray[nextReplace] = pagesArray[i];
-            
-            //setting the index that is going to be replaced next 
+
+            // setting the index that is going to be replaced next
             (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
-            
-            countPageFaults++;          //incrementing the number of page faults
-            
-            //Printing
+
+            countPageFaults++; // incrementing the number of page faults
+
+            // Printing
             printf("%02d F   ", pagesArray[i]);
             printArr(framesArray, j);
         }
-        else            // hit case
+        else // hit case
         {
-            //Printing
+            // Printing
             printf("%02d     ", pagesArray[i]);
             printArr(framesArray, j);
         }
     }
-    //Free both arrays because we won't be needing them
+    // Free both arrays because we won't be needing them
     free(pagesArray);
     free(framesArray);
     return countPageFaults;
 }
 
-int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages){ 
+int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
+{
     int *framesArray = malloc(sizeof(int) * numberOfFrames);
+    int *timeSince = malloc(sizeof(int) * numberOfFrames); // This will be used to store when was each element used
     int countPageFaults = 0;
-    int j = 0;                  // Another variable for operating on frames array
-    int nextReplace = 0;        // Index of the element in the frames array that is going to be replaced
-    for(int i=0; i<=numbeOfPages; i++){
-        if (hitMiss(framesArray, numberOfFrames, pagesArray[i]) && j < numberOfFrames)     // if the frames array is not full and miss 
+    int j = 0;           // Another variable for operating on frames array
+    int hMResult;        // Used to store the result of the hit miss function
+    int nextReplace = 0; // Index of the element in the frames array that is going to be replaced
+
+    for (int i = 0; i < numbeOfPages; i++)
+    {
+        hMResult = hitMiss(framesArray, j, pagesArray[i]);
+        if (j < numberOfFrames)
         {
-            //Adding the element to the array
-            framesArray[j++] = pagesArray[i];
+            if (hMResult == -1)
+            {                                   // miss case
+                framesArray[j] = pagesArray[i]; // insert the element in the frames array
+                timeSince[j] = 0;
+                j++;
+                for (int k = 0; k < j; k++)
+                {
+                    timeSince[k]++;
+                }
+                // Printing
+                printf("%02d     ", pagesArray[i]);
+                printArr(framesArray, j);
+            }
+            else if (hMResult != -1)
+            {
+                timeSince[hMResult] = 0; // last referenced input will be equal zero
 
-            //Printing
-            printf("%02d     ", pagesArray[i]);
-            printArr(framesArray, j);
+                for (int k = 0; k < j; k++)
+                {
+                    if (k != hMResult)
+                        timeSince[k]++;
+                }
+                // Printing
+                printf("%02d     ", pagesArray[i]);
+                printArr(framesArray, j);
+            }
         }
+        else
+        {
+            if (hMResult == -1)
+            {
+                nextReplace = maxIndex(timeSince, j);
+                framesArray[nextReplace] = pagesArray[i];
+                timeSince[nextReplace] = 0;
+                countPageFaults++; // incrementing the number of page faults
+                for (int k = 0; k < j; k++)
+                {
+                    if (k != nextReplace)
+                        timeSince[k]++;
+                }
+                // Printing
+                printf("%02d F   ", pagesArray[i]);
+                printArr(framesArray, j);
+            }
+            else if (hMResult != -1)
+            {
 
-    
+                timeSince[hMResult] = 0; // last referenced input will be equal zero
+                for (int k = 0; k < j; k++)
+                {
+                    if (k != hMResult)
+                        timeSince[k]++;
+                }
+                // Printing
+                printf("%02d     ", pagesArray[i]);
+                printArr(framesArray, j);
+            }
+        }
     }
-
-
-
-
-
-
-
-
-    //Free both arrays because we won't be needing them
+    // Free both arrays because we won't be needing them
     free(pagesArray);
     free(framesArray);
     return countPageFaults;
 }
-
-
 
 int main(int argc, char const *argv[])
 {
@@ -150,7 +215,7 @@ int main(int argc, char const *argv[])
         break;
     case 'L':
     case 'l':
-        /* Call LRU */
+        countPageFaults = LRU(pages, numberOfFrames, i);
         break;
     case 'C':
     case 'c':
