@@ -62,7 +62,7 @@ int FIFO(int *pagesArray, int numberOfFrames, int numberOfPages)
     //  We took the number of pages as an argument to be able to loop on it
     for (int i = 0; i < numberOfPages; i++)
     {
-        hMResult = hitMiss(framesArray, numberOfFrames, pagesArray[i]);
+        hMResult = hitMiss(framesArray, j, pagesArray[i]);
         if (hMResult == -1 && j < numberOfFrames) // if the frames array is not full and miss
         {
             // Adding the element to the array
@@ -117,7 +117,7 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
             framesArray[j] = pagesArray[i]; // insert the element in the frames array
             timeSince[j] = 0;
             j++;
-            for (int k = 0; k < j; k++)//Incrementing the time since for each element except for the recently initialzied
+            for (int k = 0; k < j; k++) // Incrementing the time since for each element except for the recently initialzied
             {
                 timeSince[k]++;
             }
@@ -132,8 +132,8 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
             nextReplace = maxIndex(timeSince, j);
             framesArray[nextReplace] = pagesArray[i];
             timeSince[nextReplace] = 0;
-            countPageFaults++; // incrementing the number of page faults
-            for (int k = 0; k < j; k++) //Incrementing the time since for each element except for the recently initialzied
+            countPageFaults++;          // incrementing the number of page faults
+            for (int k = 0; k < j; k++) // Incrementing the time since for each element except for the recently initialzied
             {
                 if (k != nextReplace)
                     timeSince[k]++;
@@ -145,8 +145,8 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
 
         else
         {
-            timeSince[hMResult] = 0; // last referenced input will be equal zero
-            for (int k = 0; k < j; k++)     //Incrementing the time since for each element except for the recently initialzied
+            timeSince[hMResult] = 0;    // last referenced input will be equal zero
+            for (int k = 0; k < j; k++) // Incrementing the time since for each element except for the recently initialzied
             {
                 if (k != hMResult)
                     timeSince[k]++;
@@ -157,6 +157,62 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
             printArr(framesArray, j);
         }
     }
+    // Free both arrays because we won't be needing them
+    free(pagesArray);
+    free(framesArray);
+    return countPageFaults;
+}
+
+int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
+{
+    int *framesArray = malloc(sizeof(int) * numberOfFrames);
+    int *useBit = malloc(sizeof(int) * numberOfFrames);
+    int countPageFaults = 0;
+    int j = 0;           // Another variable for operating on frames array
+    int hMResult;        // Used to store the result of the hit miss function
+    int nextReplace = 0; // Index of the element in the frames array that is going to be replaced
+
+    for (int i = 0; i < numberOfPages; i++)
+    {
+        hMResult = hitMiss(framesArray, j, pagesArray[i]);
+        if (j < numberOfFrames && hMResult == -1)
+        {
+            framesArray[j] = pagesArray[i];
+            useBit[j] = 1;
+            j++;
+            // setting the index that is going to be replaced next
+            (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
+
+            // Printing
+            printf("%02d     ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+        else if (hMResult == -1)
+        {
+            countPageFaults++;
+            while (useBit[nextReplace] == 1)
+            {
+                useBit[nextReplace] = 0;
+                (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
+            }
+
+            framesArray[nextReplace] = pagesArray[i];
+            useBit[nextReplace] = 1;
+            (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
+            
+            // Printing
+            printf("%02d F   ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+        else // hit case
+        {
+            useBit[hMResult] = 1;
+            // Printing
+            printf("%02d     ", pagesArray[i]);
+            printArr(framesArray, j);
+        }
+    }
+
     // Free both arrays because we won't be needing them
     free(pagesArray);
     free(framesArray);
@@ -206,7 +262,7 @@ int main(int argc, char const *argv[])
         break;
     case 'C':
     case 'c':
-        /* Call Clock */
+        countPageFaults = CLOCK(pages, numberOfFrames, i);
         break;
     case 'O':
     case 'o':
