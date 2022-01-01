@@ -330,6 +330,6 @@ int main(int argc, char const *argv[])
         break;
     }
     printf("-------------------------------------\n");
-    printf("Number of page faults = %d", countPageFaults);
+    printf("Number of page faults = %d\n", countPageFaults);
     return 0;
 }
