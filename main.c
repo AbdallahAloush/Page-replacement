@@ -49,10 +49,11 @@ int optimalReplace(int *pagesArray, int *framesArray, int startPage, int numberO
             return i;
 
         else
-            nextOccurence[j++] = startPage - searchResult;
+            nextOccurence[j++] = searchResult - startPage;
     }
+    int optimalIndex = maxIndex(nextOccurence, numberOfFrames); 
     free(nextOccurence);
-    return maxIndex(nextOccurence, numberOfFrames);
+    return optimalIndex;
 }
 void printArr(int *array, int numberOfPrints)
 {
