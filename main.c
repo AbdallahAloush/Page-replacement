@@ -37,9 +37,9 @@ int maxIndex(int *array, int arraySize)
 
 int optimalReplace(int *pagesArray, int *framesArray, int startPage, int numberOfPages, int numberOfFrames)
 {
-    int searchResult;           // Returned value of hitMiss function (index)
+    int searchResult; // Returned value of hitMiss function (index)
     int *nextOccurence = malloc(sizeof(int) * numberOfFrames);
-    int j = 0;                  // Iterator for the next occurence array
+    int j = 0; // Iterator for the next occurence array
 
     for (int i = 0; i < numberOfFrames; i++)
     {
@@ -69,9 +69,9 @@ int FIFO(int *pagesArray, int numberOfFrames, int numberOfPages)
 {
     int *framesArray = malloc(sizeof(int) * numberOfFrames);
     int countPageFaults = 0;
-    int j = 0;               // Another variable for operating on frames array
-    int hMResult;            // Used to store the result of the hit miss function
-    int nextReplace = 0;     // Index of the element in the frames array that is going to be replaced
+    int j = 0;           // Another variable for operating on frames array
+    int hMResult;        // Used to store the result of the hit miss function
+    int nextReplace = 0; // Index of the element in the frames array that is going to be replaced
 
     //  We took the number of pages as an argument to be able to loop on it
     for (int i = 0; i < numberOfPages; i++)
@@ -126,14 +126,14 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
     for (int i = 0; i < numbeOfPages; i++)
     {
         hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
-        if (j < numberOfFrames && hMResult == -1)       // Frames not full and miss case
+        if (j < numberOfFrames && hMResult == -1) // Frames not full and miss case
         {
             framesArray[j] = pagesArray[i]; // insert the element in the frames array
             timeSince[j] = 0;
             j++;
 
             // Incrementing the time since for each element except for the recently initialzied
-            for (int k = 0; k < j; k++) 
+            for (int k = 0; k < j; k++)
             {
                 timeSince[k]++;
             }
@@ -143,15 +143,15 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
             printArr(framesArray, j);
         }
 
-        else if (hMResult == -1)                        // Frames are full and miss case
+        else if (hMResult == -1) // Frames are full and miss case
         {
-            nextReplace = maxIndex(timeSince, j);       
+            nextReplace = maxIndex(timeSince, j);
             framesArray[nextReplace] = pagesArray[i];
             timeSince[nextReplace] = 0;
-            countPageFaults++;          // incrementing the number of page faults
-            
+            countPageFaults++; // incrementing the number of page faults
+
             // Incrementing the time since for each element except for the recently initialzied
-            for (int k = 0; k < j; k++) 
+            for (int k = 0; k < j; k++)
             {
                 if (k != nextReplace)
                     timeSince[k]++;
@@ -164,10 +164,10 @@ int LRU(int *pagesArray, int numberOfFrames, int numbeOfPages)
 
         else
         {
-            timeSince[hMResult] = 0;    // last referenced input will be equal zero
+            timeSince[hMResult] = 0; // last referenced input will be equal zero
 
             // Incrementing the time since for each element except for the recently initialzied
-            for (int k = 0; k < j; k++) 
+            for (int k = 0; k < j; k++)
             {
                 if (k != hMResult)
                     timeSince[k]++;
@@ -197,7 +197,7 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
     for (int i = 0; i < numberOfPages; i++)
     {
         hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
-        if (j < numberOfFrames && hMResult == -1)       // Frames array not full and miss 
+        if (j < numberOfFrames && hMResult == -1) // Frames array not full and miss
         {
             // Inserting element in the frames array and manipulating the useBit array
             framesArray[j] = pagesArray[i];
@@ -211,14 +211,14 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
             printf("%02d     ", pagesArray[i]);
             printArr(framesArray, j);
         }
-        else if (hMResult == -1)        // Frames array are full and miss
+        else if (hMResult == -1) // Frames array are full and miss
         {
             countPageFaults++;
 
             // setting the index that is going to be replaced next
             while (useBit[nextReplace] == 1)
             {
-                useBit[nextReplace] = 0;        // Setting the useBit by 0 when we loop over it
+                useBit[nextReplace] = 0; // Setting the useBit by 0 when we loop over it
                 (nextReplace == numberOfFrames - 1) ? nextReplace = 0 : nextReplace++;
             }
 
@@ -231,9 +231,9 @@ int CLOCK(int *pagesArray, int numberOfFrames, int numberOfPages)
             printf("%02d F   ", pagesArray[i]);
             printArr(framesArray, j);
         }
-        else            // hit case
+        else // hit case
         {
-            useBit[hMResult] = 1;               // Setting the useBit of the accessed frame
+            useBit[hMResult] = 1; // Setting the useBit of the accessed frame
 
             // Printing
             printf("%02d     ", pagesArray[i]);
@@ -257,7 +257,7 @@ int OPTIMAL(int *pagesArray, int numberOfFrames, int numberOfPages)
     for (int i = 0; i < numberOfPages; i++)
     {
         hMResult = hitMiss(framesArray, 0, j, pagesArray[i]);
-        if (j < numberOfFrames && hMResult == -1)       // array not full and miss
+        if (j < numberOfFrames && hMResult == -1) // array not full and miss
         {
             // Adding the element to the array
             framesArray[j++] = pagesArray[i];
@@ -266,7 +266,7 @@ int OPTIMAL(int *pagesArray, int numberOfFrames, int numberOfPages)
             printf("%02d     ", pagesArray[i]);
             printArr(framesArray, j);
         }
-        else if (hMResult == -1)                        // array full and miss
+        else if (hMResult == -1) // array full and miss
         {
             nextReplace = optimalReplace(pagesArray, framesArray, i, numberOfPages, numberOfFrames);
             framesArray[nextReplace] = pagesArray[i];
@@ -295,14 +295,14 @@ int main(int argc, char const *argv[])
     int numberOfFrames;
     int tempPageNumber;
     int *pages = malloc(sizeof(int) * maxArray);
-    int i = 0;                      // Iterator for scanning the page numbers as input
+    int i = 0; // Iterator for scanning the page numbers as input
     int countPageFaults = 0;
     char replacementAlgo[maxString];
 
     // Scanning from the user
     scanf("%d", &numberOfFrames);
     scanf("%s", replacementAlgo);
-    
+
     while (1)
     {
         scanf("%d", &tempPageNumber);
@@ -321,7 +321,7 @@ int main(int argc, char const *argv[])
     printf("\n-------------------------------------\n");
     printf("Page   Content of Frames\n");
     printf("----   -----------------\n");
-    
+
     /*
     Making a switch case to be able to call each function
     Since the 4 options has distinct first characters we can use switch case instead of using string comparisons
