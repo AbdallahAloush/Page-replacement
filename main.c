@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define maxString 16
+#define maxString 128
 #define maxArray 128
 
 // This function is used to check if the new page is in the frames array or not
@@ -299,6 +299,13 @@ int main(int argc, char const *argv[])
     int countPageFaults = 0;
     char replacementAlgo[maxString];
 
+    /*
+    This is used for dynamic array resizing set initially to the constant maxArray
+    I set this value by a constant because most likely this won't be needed
+    just added this for extra insurance
+    */
+    int maxArrayRealloc = maxArray;
+
     // Scanning from the user
     scanf("%d", &numberOfFrames);
     scanf("%s", replacementAlgo);
@@ -308,12 +315,17 @@ int main(int argc, char const *argv[])
         scanf("%d", &tempPageNumber);
         if (tempPageNumber == -1)
             break;
-        else
+        else if (i == maxArrayRealloc) // Most likely won't be used
         {
-            // We can add reallocation here if the i exceeded the maximum array size which is maxArray
-            pages[i] = tempPageNumber;
-            i++;
+            /*
+            If the number of read pages is equal to the maximum size of pages array then
+            reallocate an array of double the initial size
+            */
+            maxArrayRealloc *= 2;                                  // Double the maximum array size
+            pages = realloc(pages, sizeof(int) * maxArrayRealloc); // Realloc memory
         }
+        pages[i] = tempPageNumber; // Adding the newely read page to the array
+        i++;
     }
 
     // Printing the results
